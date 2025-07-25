@@ -24,21 +24,26 @@ import (
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
 // DeploymentFreezerSpec defines the desired state of DeploymentFreezer
+// +kubebuilder:subresource:status
 type DeploymentFreezerSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
-	// The following markers will use OpenAPI v3 schema to validate the value
-	// More info: https://book.kubebuilder.io/reference/markers/crd-validation.html
-
-	// foo is an example field of DeploymentFreezer. Edit deploymentfreezer_types.go to remove/update
-	// +optional
-	Foo *string `json:"foo,omitempty"`
+	// Name of the target Deployment
+	DeploymentName string `json:"deploymentName"`
+	// Namespace of the target Deployment
+	DeploymentNamespace string `json:"deploymentNamespace"`
+	// Duration in seconds to freeze the deployment
+	DurationSeconds int64 `json:"durationSeconds"`
 }
 
-// DeploymentFreezerStatus defines the observed state of DeploymentFreezer.
+// DeploymentFreezerStatus defines the observed state of DeploymentFreezer
 type DeploymentFreezerStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+	// When the deployment was frozen
+	FrozenSince *metav1.Time `json:"frozenSince,omitempty"`
+	// How long the deployment has been frozen (human readable)
+	FrozenDuration string `json:"frozenDuration,omitempty"`
+	// Whether the deployment is currently frozen
+	IsFrozen bool `json:"isFrozen"`
+	// Reason for the current state
+	Reason string `json:"reason,omitempty"`
 }
 
 // +kubebuilder:object:root=true
