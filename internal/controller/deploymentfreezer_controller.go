@@ -40,6 +40,7 @@ const (
 )
 
 // DeploymentFreezerReconciler reconciles a DeploymentFreezer object
+// +kubebuilder:rbac:groups=apps,resources=deployments,verbs=get;list;watch;update;patch
 type DeploymentFreezerReconciler struct {
 	client.Client
 	Scheme *runtime.Scheme

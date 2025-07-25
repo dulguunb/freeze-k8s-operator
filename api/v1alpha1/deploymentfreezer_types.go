@@ -35,6 +35,7 @@ type DeploymentFreezerSpec struct {
 }
 
 // DeploymentFreezerStatus defines the observed state of DeploymentFreezer
+// +kubebuilder:subresource:status
 type DeploymentFreezerStatus struct {
 	// When the deployment was frozen
 	FrozenSince *metav1.Time `json:"frozenSince,omitempty"`

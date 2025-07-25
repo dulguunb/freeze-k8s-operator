@@ -257,6 +257,85 @@ var _ = Describe("Manager", Ordered, func() {
 			))
 		})
 
+		It("should freeze and unfreeze a deployment after the specified duration", func() {
+			By("creating a test deployment")
+			deployYaml := `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: test-deploy
+  namespace: ` + namespace + `
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: test-deploy
+  template:
+    metadata:
+      labels:
+        app: test-deploy
+    spec:
+      containers:
+      - name: nginx
+        image: nginx
+`
+			tmpFile := "/tmp/test-deploy.yaml"
+			Expect(os.WriteFile(tmpFile, []byte(deployYaml), 0644)).To(Succeed())
+			cmd := exec.Command("kubectl", "apply", "-f", tmpFile)
+			_, err := utils.Run(cmd)
+			Expect(err).NotTo(HaveOccurred())
+
+			By("creating a DeploymentFreezer CR with a short duration")
+			dfYaml := `
+apiVersion: dulguun-test.io/v1alpha1
+kind: DeploymentFreezer
+metadata:
+  name: freeze-test-deploy
+  namespace: ` + namespace + `
+spec:
+  deploymentName: test-deploy
+  deploymentNamespace: ` + namespace + `
+  durationSeconds: 10
+`
+			tmpFileDF := "/tmp/freeze-test-deploy.yaml"
+			Expect(os.WriteFile(tmpFileDF, []byte(dfYaml), 0644)).To(Succeed())
+			cmd = exec.Command("kubectl", "apply", "-f", tmpFileDF)
+			_, err = utils.Run(cmd)
+			Expect(err).NotTo(HaveOccurred())
+
+			By("verifying the deployment is frozen")
+			Eventually(func() string {
+				cmd := exec.Command("kubectl", "get", "deployment", "test-deploy", "-n", namespace, "-o", "jsonpath={.spec.replicas}")
+				out, _ := utils.Run(cmd)
+				return out
+			}, 30*time.Second, 2*time.Second).Should(Equal("0"))
+
+			By("waiting for the duration to elapse and verifying the deployment is unfrozen")
+			Eventually(func() string {
+				cmd := exec.Command("kubectl", "get", "deployment", "test-deploy", "-n", namespace, "-o", "jsonpath={.spec.replicas}")
+				out, _ := utils.Run(cmd)
+				return out
+			}, 30*time.Second, 2*time.Second).Should(Equal("2"))
+
+			By("verifying the annotation is removed")
+			cmd = exec.Command("kubectl", "get", "deployment", "test-deploy", "-n", namespace, "-o", "jsonpath={.metadata.annotations.frozenby}")
+			out, _ := utils.Run(cmd)
+			Expect(out).To(BeEmpty())
+
+			By("verifying the DeploymentFreezer status is updated")
+			cmd = exec.Command("kubectl", "get", "deploymentfreezer", "freeze-test-deploy", "-n", namespace, "-o", "json")
+			out, _ = utils.Run(cmd)
+			var status struct {
+				Status struct {
+					IsFrozen bool   `json:"isFrozen"`
+					Reason   string `json:"reason"`
+				} `json:"status"`
+			}
+			Expect(json.Unmarshal([]byte(out), &status)).To(Succeed())
+			Expect(status.Status.IsFrozen).To(BeFalse())
+			Expect(status.Status.Reason).To(ContainSubstring("Unfrozen after duration elapsed"))
+		})
+
 		// +kubebuilder:scaffold:e2e-webhooks-checks
 
 		// TODO: Customize the e2e test suite with scenarios specific to your project.
