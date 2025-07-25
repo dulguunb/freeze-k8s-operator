@@ -40,17 +40,16 @@ type DeploymentFreezerStatus struct {
 	// When the deployment was frozen
 	FrozenSince *metav1.Time `json:"frozenSince,omitempty"`
 	// How long the deployment has been frozen (human readable)
-	FrozenDuration string `json:"frozenDuration,omitempty"`
+	LeftSeconds int64 `json:"frozenDuration,omitempty"`
 	// Whether the deployment is currently frozen
 	IsFrozen bool `json:"isFrozen"`
 	// Reason for the current state
 	Reason string `json:"reason,omitempty"`
 }
 
+// DeploymentFreezer is the Schema for the deploymentfreezers API
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
-
-// DeploymentFreezer is the Schema for the deploymentfreezers API
 type DeploymentFreezer struct {
 	metav1.TypeMeta `json:",inline"`
 
@@ -67,9 +66,8 @@ type DeploymentFreezer struct {
 	Status DeploymentFreezerStatus `json:"status,omitempty,omitzero"`
 }
 
-// +kubebuilder:object:root=true
-
 // DeploymentFreezerList contains a list of DeploymentFreezer
+// +kubebuilder:object:root=true
 type DeploymentFreezerList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`

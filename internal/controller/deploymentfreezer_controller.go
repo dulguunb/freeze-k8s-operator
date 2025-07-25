@@ -49,6 +49,7 @@ type DeploymentFreezerReconciler struct {
 // +kubebuilder:rbac:groups=dulguun-test.io.dulguun-test.io,resources=deploymentfreezers,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=dulguun-test.io.dulguun-test.io,resources=deploymentfreezers/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=dulguun-test.io.dulguun-test.io,resources=deploymentfreezers/finalizers,verbs=update
+// +kubebuilder:rbac:groups=apps,resources=deployments,verbs=get;list;watch;update;patch
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
@@ -114,6 +115,7 @@ func (r *DeploymentFreezerReconciler) Reconcile(ctx context.Context, req ctrl.Re
 		if deploy.Spec.Replicas != nil {
 			originalReplicas = *deploy.Spec.Replicas
 		}
+		annotations = map[string]string{}
 		annotations[frozenByAnnotation] = freezer.Name
 		annotations[frozenByReplicasAnnotation] = fmt.Sprintf("%d", originalReplicas)
 		annotations[frozenByTimeAnnotation] = now.Format(time.RFC3339)
@@ -130,14 +132,12 @@ func (r *DeploymentFreezerReconciler) Reconcile(ctx context.Context, req ctrl.Re
 
 	// If frozen, check if duration has elapsed
 	if frozenSince != nil {
-		duration := time.Duration(freezer.Spec.DurationSeconds) * time.Second
-		frozenFor := now.Sub(*frozenSince)
+		future := frozenSince.Add(time.Duration(freezer.Spec.DurationSeconds) * time.Second)
 		freezer.Status.FrozenSince = &metav1.Time{Time: *frozenSince}
-		freezer.Status.FrozenDuration = frozenFor.String()
+		freezer.Status.LeftSeconds = int64(future.Sub(now).Seconds())
 		freezer.Status.IsFrozen = true
 		freezer.Status.Reason = ""
-		_ = r.Status().Update(ctx, &freezer)
-		if duration > 0 && frozenFor >= duration {
+		if freezer.Status.LeftSeconds <= 0 {
 			shouldUnfreeze = true
 		}
 	}

@@ -59,7 +59,8 @@ spec:
             properties:
               frozenDuration:
                 description: How long the deployment has been frozen (human readable)
-                type: string
+                format: int64
+                type: integer
               frozenSince:
                 description: When the deployment was frozen
                 format: date-time
