@@ -1,11 +1,32 @@
+---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  labels:
-    app.kubernetes.io/name: k8s-builder
-    app.kubernetes.io/managed-by: kustomize
   name: manager-role
 rules:
-- apiGroups: [""]
-  resources: ["pods"]
-  verbs: ["get", "list", "watch"]
+- apiGroups:
+  - dulguun-test.io.dulguun-test.io
+  resources:
+  - deploymentfreezers
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - dulguun-test.io.dulguun-test.io
+  resources:
+  - deploymentfreezers/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - dulguun-test.io.dulguun-test.io
+  resources:
+  - deploymentfreezers/status
+  verbs:
+  - get
+  - patch
+  - update
