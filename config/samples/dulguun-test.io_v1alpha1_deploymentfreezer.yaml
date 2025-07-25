@@ -1,0 +1,9 @@
+apiVersion: dulguun-test.io.dulguun-test.io/v1alpha1
+kind: DeploymentFreezer
+metadata:
+  labels:
+    app.kubernetes.io/name: k8s-builder
+    app.kubernetes.io/managed-by: kustomize
+  name: deploymentfreezer-sample
+spec:
+  # TODO(user): Add fields here
