@@ -305,20 +305,23 @@ spec:
 
 			By("verifying the deployment is frozen")
 			Eventually(func() string {
-				cmd := exec.Command("kubectl", "get", "deployment", "test-deploy", "-n", namespace, "-o", "jsonpath={.spec.replicas}")
+				cmd := exec.Command("kubectl", "get", "deployment", "test-deploy", "-n", namespace,
+					"-o", "jsonpath={.spec.replicas}")
 				out, _ := utils.Run(cmd)
 				return out
 			}, 30*time.Second, 2*time.Second).Should(Equal("0"))
 
 			By("waiting for the duration to elapse and verifying the deployment is unfrozen")
 			Eventually(func() string {
-				cmd := exec.Command("kubectl", "get", "deployment", "test-deploy", "-n", namespace, "-o", "jsonpath={.spec.replicas}")
+				cmd := exec.Command("kubectl", "get", "deployment", "test-deploy", "-n", namespace,
+					"-o", "jsonpath={.spec.replicas}")
 				out, _ := utils.Run(cmd)
 				return out
 			}, 30*time.Second, 2*time.Second).Should(Equal("2"))
 
 			By("verifying the annotation is removed")
-			cmd = exec.Command("kubectl", "get", "deployment", "test-deploy", "-n", namespace, "-o", "jsonpath={.metadata.annotations.frozenby}")
+			cmd = exec.Command("kubectl", "get", "deployment", "test-deploy", "-n",
+				namespace, "-o", "jsonpath={.metadata.annotations.frozenby}")
 			out, _ := utils.Run(cmd)
 			Expect(out).To(BeEmpty())
 
